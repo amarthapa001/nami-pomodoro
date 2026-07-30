@@ -1,0 +1,27 @@
+# Python virtual environments
+env/
+.venv/
+venv/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Django / app local settings
+backend/.env
+backend/.env.local
+backend/.env.*
+!backend/.env.example
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Editor / OS artifacts
+.vscode/
+.idea/
+.DS_Store
+*.log

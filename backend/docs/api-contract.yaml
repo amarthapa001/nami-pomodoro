@@ -1,0 +1,523 @@
+openapi: 3.0.3
+info:
+  title: Pomodoro API
+  version: 1.0.0
+  description: |
+    API contract for the Pomodoro backend app.
+    This document reflects the current implementation in the Django REST Framework backend.
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/register/:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+
+  /api/auth/login/:
+    post:
+      summary: Login and obtain JWT tokens
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Tokens issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/refresh/:
+    post:
+      summary: Refresh an access token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+
+  /api/auth/logout/:
+    post:
+      summary: Blacklist the refresh token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logged out successfully
+
+  /api/profile/me/:
+    get:
+      summary: Get the authenticated user's profile
+      tags:
+        - Profiles
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+    patch:
+      summary: Update the authenticated user's profile
+      tags:
+        - Profiles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+
+  /api/profile/me/avatar/:
+    post:
+      summary: Upload or update the authenticated user's avatar
+      tags:
+        - Profiles
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatar_url:
+                    type: string
+                    nullable: true
+
+  /api/profile/{user_id}/:
+    get:
+      summary: Get a public profile by user ID
+      tags:
+        - Profiles
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: Profile not found
+
+  /api/friends/:
+    get:
+      summary: List friendships for the authenticated user
+      tags:
+        - Friends
+      responses:
+        '200':
+          description: Friendships retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Friendship'
+
+  /api/friends/requests/:
+    post:
+      summary: Send a friend request
+      tags:
+        - Friends
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receiver_id
+              properties:
+                receiver_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Friend request already existed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequest'
+        '201':
+          description: Friend request created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequest'
+        '400':
+          description: Invalid request or self-request
+
+  /api/friends/requests/incoming/:
+    get:
+      summary: List pending incoming friend requests
+      tags:
+        - Friends
+      responses:
+        '200':
+          description: Incoming requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FriendRequest'
+
+  /api/friends/requests/{pk}/:
+    patch:
+      summary: Accept or reject a received friend request
+      tags:
+        - Friends
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [accepted, rejected]
+      responses:
+        '200':
+          description: Request updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequest'
+        '400':
+          description: Invalid status
+        '404':
+          description: Request not found
+
+  /api/friends/{pk}/:
+    delete:
+      summary: Remove a friendship
+      tags:
+        - Friends
+      parameters:
+        - name: pk
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Friendship removed successfully
+        '404':
+          description: Friendship not found
+
+  /api/rooms/:
+    get:
+      summary: List rooms owned by the authenticated user's friends
+      tags:
+        - Rooms
+      responses:
+        '200':
+          description: Rooms retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+
+  /api/rooms/me/:
+    get:
+      summary: Get the authenticated user's room
+      tags:
+        - Rooms
+      responses:
+        '200':
+          description: Room retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+
+  /api/rooms/{room_id}/:
+    get:
+      summary: Get a specific room by ID
+      tags:
+        - Rooms
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Room retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '403':
+          description: Access denied
+        '404':
+          description: Room not found
+
+  /ws/rooms/{room_id}/:
+    get:
+      summary: WebSocket endpoint for room events
+      tags:
+        - WebSocket
+      description: Real-time room channel for the given room ID.
+      parameters:
+        - name: room_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: WebSocket upgrade successful
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - display_name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        display_name:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address used for authentication.
+        password:
+          type: string
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh
+      properties:
+        refresh:
+          type: string
+
+    LogoutRequest:
+      type: object
+      required:
+        - refresh
+      properties:
+        refresh:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    RefreshResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        bio:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+        bio:
+          type: string
+
+    FriendRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sender_profile:
+          $ref: '#/components/schemas/Profile'
+        receiver_profile:
+          $ref: '#/components/schemas/Profile'
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        created_at:
+          type: string
+          format: date-time
+
+    Friendship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        friend_profile:
+          $ref: '#/components/schemas/Profile'
+        created_at:
+          type: string
+          format: date-time
+
+    RoomSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_profile:
+          $ref: '#/components/schemas/Profile'
+        status:
+          type: string
+          enum: [idle, running, paused, break]
+        session_count:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner_profile:
+          $ref: '#/components/schemas/Profile'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomSession'
+        created_at:
+          type: string
+          format: date-time
