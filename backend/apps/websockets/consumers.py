@@ -52,7 +52,19 @@ class RoomConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_room_state(self):
         sessions = RoomSession.objects.filter(room_id=self.room_id).select_related("user__profile")
-        return [{"user_id": str(s.user.id), "display_name": s.user.profile.display_name, "avatar_url": s.user.profile.avatar.url if s.user.profile.avatar else None, "status": s.status, "session_count": s.session_count} for s in sessions]
+        result = []
+        for s in sessions:
+            prof = s.user.profile
+            img = prof.avatar.url if prof.avatar else (prof.profile_image_url or getattr(s.user, "profile_image_url", None))
+            result.append({
+                "user_id": str(s.user.id),
+                "display_name": prof.display_name,
+                "avatar_url": img,
+                "profile_image_url": img,
+                "status": s.status,
+                "session_count": s.session_count,
+            })
+        return result
 
     @database_sync_to_async
     def update_session(self, status):

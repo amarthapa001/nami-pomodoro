@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +23,7 @@ INSTALLED_APPS = [
     "channels",
     "cloudinary",
     "cloudinary_storage",
-        # our apps
+    # our apps
     "apps.users",
     "apps.profiles",
     "apps.friends",
@@ -84,7 +85,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-from datetime import timedelta
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -101,12 +101,19 @@ CHANNEL_LAYERS = {
     },
 }
 
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME", default="dummy"),
-    "API_KEY": config("CLOUDINARY_API_KEY", default="dummy"),
-    "API_SECRET": config("CLOUDINARY_API_SECRET", default="dummy"),
-}
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+_cloudinary_name = config("CLOUDINARY_CLOUD_NAME", default="")
+if _cloudinary_name and _cloudinary_name not in ("your-cloud-name", "dummy"):
+    CLOUDINARY_STORAGE = {
+        "CLOUD_NAME": _cloudinary_name,
+        "API_KEY": config("CLOUDINARY_API_KEY", default=""),
+        "API_SECRET": config("CLOUDINARY_API_SECRET", default=""),
+    }
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+else:
+    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",

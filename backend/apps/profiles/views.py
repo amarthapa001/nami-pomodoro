@@ -16,8 +16,17 @@ class AvatarUploadView(APIView):
     def post(self, request):
         serializer = AvatarUploadSerializer(request.user.profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"avatar_url": request.user.profile.avatar.url}, status=status.HTTP_200_OK)
+        profile = serializer.save()
+        url = profile.avatar.url if profile.avatar else ""
+        if url:
+            profile.profile_image_url = url
+            profile.save(update_fields=["profile_image_url"])
+            if hasattr(profile, "user") and profile.user:
+                profile.user.profile_image_url = url
+                profile.user.save(update_fields=["profile_image_url"])
+            if not (url.startswith("http://") or url.startswith("https://")):
+                url = request.build_absolute_uri(url)
+        return Response({"avatar_url": url, "profile_image_url": url}, status=status.HTTP_200_OK)
 
 
 class PublicProfileView(generics.RetrieveAPIView):
