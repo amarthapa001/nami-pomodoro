@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest, roomSocketUrl, storage } from "./api.js";
+import { useNavigate } from "react-router-dom";
 
 const emptyAuthForm = {
   email: "",
@@ -61,6 +62,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const socketRef = useRef(null);
+  const navigate = useNavigate();
 
   const token = auth?.access;
   const currentRoomId = selectedRoom?.id || myRoom?.id;
@@ -182,6 +184,7 @@ function App() {
       setRooms([]);
       setMyRoom(null);
       setSelectedRoom(null);
+      navigate("/");
     });
   }
 
