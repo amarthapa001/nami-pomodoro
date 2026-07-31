@@ -28,8 +28,8 @@ backend:
 
 start:
 	@Write-Host "Frontend:     $(FRONTEND_URL)"; Write-Host "Backend API:  $(BACKEND_URL)"; Write-Host "API contract: $(API_CONTRACT)"; Write-Host "WebSocket:    $(WS_URL)"
-	@Start-Process powershell.exe -ArgumentList '-NoExit', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Set-Location ''$(CURDIR)\backend''; docker compose up'
-	@Start-Process powershell.exe -ArgumentList '-NoExit', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'Set-Location ''$(CURDIR)\frontend''; npm install; npm run dev -- --host 127.0.0.1'
+	@Start-Process powershell.exe -WorkingDirectory "$(CURDIR)\backend" -ArgumentList '-NoExit', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'docker compose up'
+	@Start-Process powershell.exe -WorkingDirectory "$(CURDIR)\frontend" -ArgumentList '-NoExit', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', 'npm install; npm run dev -- --host 127.0.0.1'
 	@Write-Host ""
 	@Write-Host "Started backend and frontend in separate PowerShell windows."
 
