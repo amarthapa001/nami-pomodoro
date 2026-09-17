@@ -1,0 +1,319 @@
+# Nami-Pomodoro — Project Status Document
+# Date: 2083-5-29
+# Purpose: Record of current project state for developer reference
+
+---
+
+## 1. Project Status
+
+**Nami** is an ocean-themed Pomodoro study dashboard. The project is a full-stack application
+(React frontend + Django backend) designed for solo and collaborative focus sessions.
+
+**Current development stage: Early-to-mid frontend development.**
+
+The frontend is actively being rebuilt with a new ocean-themed design. The original backend
+(Django REST + WebSocket) and the original frontend (auth pages, rooms, friends) have been
+fully archived into `_archive/`. The current codebase is a fresh frontend-only build running
+on mock data, with the backend shell still in place but all Django apps commented out.
+
+---
+
+## 2. Work Completed So Far
+
+### Frontend (Active — `frontend/src/`)
+
+| Feature / Component               | Status                  |
+|------------------------------------|-------------------------|
+| Vite + React 19 project scaffold   | [COMPLETED]            |
+| Dashboard page (single-page app)   | [COMPLETED]            |
+| Pomodoro timer engine (useTimer)   | [COMPLETED]            |
+| Mode switching (Focus/Short/Long)  | [COMPLETED]            |
+| Timer controls (Start/Pause/Reset) | [COMPLETED]            |
+| Session name input                 | [COMPLETED]            |
+| Session completion overlay         | [COMPLETED]            |
+| Session history (localStorage)     | [COMPLETED]            |
+| Daily streak calculation           | [COMPLETED]            |
+| Time-of-day sky gradient           | [COMPLETED]            |
+| Ocean SVG wave scene               | [COMPLETED]            |
+| Animated sailing boat (progress)   | [COMPLETED]            |
+| Motivational quotes                | [COMPLETED]            |
+| Background music player (real audio)| [COMPLETED]           |
+| Todo / task list panel             | [COMPLETED]            |
+| Session history panel              | [COMPLETED]            |
+| Settings panel (durations/toggles) | [COMPLETED]            |
+| Keyboard shortcuts                 | [COMPLETED]            |
+| Sound effects (Web Audio API)      | [COMPLETED]            |
+| Browser notifications              | [COMPLETED]            |
+| Navbar with panel toggles          | [COMPLETED]            |
+| Streak badge                       | [COMPLETED]            |
+| Profile panel                      | [PARTIALLY IMPLEMENTED]|
+| Leaderboard panel                  | [PREPARED — mock only] |
+| CSS design system (~1459 lines)    | [COMPLETED]            |
+| API service layer (mock wrappers)  | [PREPARED]             |
+
+### Backend (Shell only — `backend/`)
+
+| Feature                            | Status                  |
+|------------------------------------|-------------------------|
+| Django project scaffold (config/)  | [COMPLETED]            |
+| settings.py (JWT, Channels, CORS)  | [COMPLETED]            |
+| Docker Compose (Postgres + Redis)  | [COMPLETED]            |
+| Dockerfile                         | [COMPLETED]            |
+| Entrypoint script                  | [COMPLETED]            |
+| OpenAPI 3.0.3 contract             | [COMPLETED]            |
+| Makefile (dev commands)            | [COMPLETED]            |
+| CI/CD pipeline (GitHub Actions)    | [COMPLETED]            |
+| All Django apps (users, profiles, rooms, friends, websockets) | [ARCHIVED] |
+
+### Archived Code (`_archive/`)
+
+| Feature                            | Status                  |
+|------------------------------------|-------------------------|
+| Custom User model (UUID, email)    | [ARCHIVED]             |
+| User profiles (avatar, bio)        | [ARCHIVED]             |
+| Friend system (requests, list)     | [ARCHIVED]             |
+| Focus rooms (owner, sessions)      | [ARCHIVED]             |
+| WebSocket consumer (timer sync)    | [ARCHIVED]             |
+| JWT auth middleware (WebSocket)    | [ARCHIVED]             |
+| Original frontend (AuthPage, DashboardPage, FriendsPage, RequestsPage, RoomPage, SettingsPage) | [ARCHIVED] |
+| AuthContext (auth state + API)     | [ARCHIVED]             |
+| Original API utility (api.js)      | [ARCHIVED]             |
+| Original CSS (~670 lines)          | [ARCHIVED]             |
+
+---
+
+## 3. Feature Descriptions
+
+### Timer Engine — `useTimer.js` [COMPLETED]
+- Full Pomodoro countdown: Focus (25m), Short Break (5m), Long Break (15m)
+- Start, pause, resume, reset, mode switch
+- Progress calculation (0–1), formatted time (MM:SS)
+- Session counting per mode, completion callback
+- Document title updates while running
+- Implemented in: `frontend/src/hooks/useTimer.js`
+
+### Session History — `useSessionHistory.js` [COMPLETED]
+- Records completed sessions to `localStorage` (key: `nami.sessionHistory`)
+- Groups sessions by day, calculates daily streak
+- Aggregate stats: total sessions, total focus minutes, streak
+- Max 200 sessions stored
+- Implemented in: `frontend/src/hooks/useSessionHistory.js`
+- **Data is local only — no backend persistence**
+
+### Sky Theme — `useSkyTheme.js` [COMPLETED]
+- Dynamic CSS gradient based on user's local time of day
+- 4 themes: Night (8pm–5am), Dawn (5am–8am), Day (8am–5pm), Dusk (5pm–8pm)
+- Updates every 60 seconds
+- Implemented in: `frontend/src/hooks/useSkyTheme.js`
+
+### Audio System — `useAudio.js` [COMPLETED]
+- Web Audio API — generates tones programmatically (no audio files needed)
+- Completion chime: 3-tone ascending (C5, E5, G5)
+- Tick sound function (available but not actively called by timer)
+- Respects sound enabled/disabled toggle from Settings
+- Implemented in: `frontend/src/hooks/useAudio.js`
+
+### Background Music — `Music.jsx` [COMPLETED]
+- HTML5 Audio element with real external audio URLs (Pixabay CDN)
+- 4 tracks: Ocean Waves, Calm Piano, Rain, Ambient + None
+- Volume slider, loop playback, track switching
+- Now-playing indicator in navbar and panel
+- Implemented in: `frontend/src/components/Music/Music.jsx`
+
+### Keyboard Shortcuts — `useKeyboardShortcuts.js` [COMPLETED]
+- Space: Start/Pause/Resume, R: Reset, Esc: Close panel
+- 1/2/3: Switch mode (only when not running)
+- Disabled when typing in input/textarea
+- Implemented in: `frontend/src/hooks/useKeyboardShortcuts.js`
+
+### Ocean + Boat Scene [COMPLETED]
+- 4-layer SVG wave animation with foam highlights
+- Waves animate when timer is running (`ocean-alive` class)
+- Boat SVG moves left→right based on timer progress (8%–88%)
+- Boat has bob animation when timer is running
+- Implemented in: `frontend/src/components/Ocean/Ocean.jsx`, `Boat/Boat.jsx`
+
+### Todo / Task List — `Todo.jsx` [COMPLETED]
+- Add, complete (checkbox), delete tasks
+- Uses in-memory state (initialized from MOCK_TASKS)
+- **No persistence — tasks reset on page reload**
+- Implemented in: `frontend/src/components/Todo/Todo.jsx`
+
+### Profile Panel — `Profile.jsx` [PARTIALLY IMPLEMENTED]
+- Shows hardcoded user info (username: "Amar", email: "amar@example.com")
+- Displays real stats from session history (focus minutes, sessions, streak)
+- "Edit Profile" and "Logout" buttons exist but have **no functionality**
+- Implemented in: `frontend/src/components/Profile/Profile.jsx`
+
+### Leaderboard — `Leaderboard.jsx` [PREPARED — mock only]
+- Renders a "Weekly Voyage" leaderboard from `MOCK_LEADERBOARD` data
+- Hardcoded 5 entries, no backend endpoint exists for leaderboard
+- Implemented in: `frontend/src/components/Leaderboard/Leaderboard.jsx`
+
+### Settings Panel — `Settings.jsx` [COMPLETED]
+- Timer duration adjusters (Focus ±5m, Short Break ±1m, Long Break ±5m, range 1–120m)
+- Auto-start break toggle, Auto-start focus toggle
+- Sound effects toggle (controls useAudio)
+- Keyboard shortcuts reference
+- Implemented in: `frontend/src/components/Settings/Settings.jsx`
+
+### API Service Layer — `services/api.js` [PREPARED]
+- Functions defined: fetchProfile, fetchLeaderboard, saveSession, fetchTasks, createTask, updateTask, deleteTask
+- **All functions return mock data — no real API calls**
+- Contains commented-out real API call examples
+- `API_BASE` reads from `VITE_API_BASE_URL` env var
+- Implemented in: `frontend/src/services/api.js`
+
+### Backend Configuration [COMPLETED but NOT ACTIVE]
+- `settings.py` fully configured for: PostgreSQL, Redis, JWT, Channels, Cloudinary, CORS, WhiteNoise
+- All 5 Django apps are **commented out** in INSTALLED_APPS
+- `AUTH_USER_MODEL` is **commented out**
+- `urls.py` has only `admin/` route — all API routes commented out
+- `asgi.py` imports `apps.websockets` which will **fail** if backend is started without restoring archived apps
+- `entrypoint.sh` has `migrate` and `collectstatic` **commented out**
+
+### CI/CD Pipeline — `ci.yaml` [COMPLETED]
+- 4 jobs: test → docker → deploy-render, deploy-vercel
+- Tests run with PostgreSQL 16 + Redis 7 services
+- Docker build + push to Docker Hub
+- Backend deploy via Render webhook, Frontend deploy via Vercel
+- **Note:** CI test job references `config.settings.local` which does not exist — will fail
+
+---
+
+## 4. Current Frontend Status
+
+**Single page application** with one route: `/` → Dashboard.
+
+The Dashboard is the complete user experience right now. It is a full-viewport ocean-themed
+composition that includes:
+
+**Active and functional:**
+- Pomodoro timer with mode switching and controls
+- Session name input
+- Session completion overlay with break/continue options
+- Animated ocean waves + sailing boat driven by timer progress
+- Time-of-day sky gradient
+- Motivational quotes (random on mount)
+- Background music player (4 real audio tracks)
+- Todo/task list (in-memory, no persistence)
+- Session history with daily grouping (localStorage)
+- Settings panel (timer durations, auto-start, sound toggle)
+- Keyboard shortcuts
+- Streak badge
+- Browser notifications on session complete
+
+**Exist but limited:**
+- Profile panel — hardcoded user info, buttons do nothing
+- Leaderboard panel — fully mock data, no real ranking
+
+**Do NOT exist in current frontend:**
+- Login / Register pages
+- Auth context or any auth flow
+- Friends page
+- Friend requests page
+- Room page (collaborative rooms)
+- Settings page (profile editing, avatar upload)
+- Any routing beyond `/`
+
+All original frontend pages (AuthPage, DashboardPage, FriendsPage, RequestsPage, RoomPage,
+SettingsPage) and AuthContext exist only in `_archive/frontend/src/`.
+
+---
+
+## 5. Current Backend Status
+
+The Django backend **shell exists** but is **not functional as an API server.**
+
+**What exists and is configured:**
+- Django 6.0.6 project with config/ (settings, urls, asgi, wsgi)
+- PostgreSQL database configuration
+- Redis channel layer configuration
+- JWT authentication (SimpleJWT) configuration
+- CORS configuration for frontend origin
+- Cloudinary conditional storage configuration
+- WhiteNoise static file serving
+- Docker Compose with db + redis + backend services
+- Dockerfile (Python 3.12-slim)
+- OpenAPI 3.0.3 specification (`backend/docs/api-contract.yaml`)
+- `requirements.txt` with 44 packages
+
+**What is NOT active:**
+- The `backend/apps/` directory is **empty** — all apps are in `_archive/backend/apps/`
+- All 5 apps commented out in `INSTALLED_APPS`
+- `AUTH_USER_MODEL` commented out
+- No API URL routes registered (only admin)
+- `asgi.py` will crash on import (references archived websockets app)
+- Entrypoint has migrations commented out
+
+**Important integrations present in configuration but not active:**
+- Cloudinary (avatar storage) — configured, not used
+- Redis (channel layer) — configured, not used
+- Django Channels (WebSocket) — configured, app archived
+
+---
+
+## 6. What Is NOT Finished
+
+| Feature                                    | Status                          |
+|--------------------------------------------|---------------------------------|
+| Authentication (login/register/logout)     | [ARCHIVED — not in active code]|
+| User profiles (server-side)                | [ARCHIVED — not in active code]|
+| Friend system                              | [ARCHIVED — not in active code]|
+| Collaborative focus rooms                  | [ARCHIVED — not in active code]|
+| WebSocket real-time timer sync             | [ARCHIVED — not in active code]|
+| Backend API endpoints                      | [ARCHIVED — not in active code]|
+| Todo persistence (backend or localStorage) | Not implemented                 |
+| Profile editing                            | Profile panel exists, edit button does nothing |
+| Logout functionality                       | Button exists, no auth to log out from |
+| Leaderboard (real data)                    | Mock only, no backend endpoint  |
+| Session history persistence (server-side)  | localStorage only               |
+| Avatar upload                              | [ARCHIVED — not in active code]|
+| Database migrations                        | Commented out in entrypoint     |
+
+---
+
+## 7. Important Notes
+
+1. **Backend will NOT start cleanly.** `asgi.py` imports `apps.websockets.middleware` and
+   `apps.websockets.routing`, which don't exist in `backend/apps/`. Starting the backend
+   container will crash. To fix: either restore websockets from archive or simplify `asgi.py`.
+
+2. **CI/CD test job will fail.** It references `config.settings.local` as DJANGO_SETTINGS_MODULE,
+   which does not exist. The project only has `config.settings`.
+
+3. **All session data is browser-local.** Session history, tasks, and settings live in
+   `localStorage` or React state. Nothing persists to a server.
+
+4. **Profile and Leaderboard use hardcoded/mock data.** The profile shows "Amar" / "amar@example.com".
+   The leaderboard shows 5 fixed entries. Neither connects to any data source.
+
+5. **The `_archive/` directory is a complete snapshot** of the original backend apps and frontend.
+   The archive README has step-by-step restore instructions. Nothing was deleted.
+
+6. **`react-bootstrap` is installed** (`package.json`) but is **not imported or used** anywhere
+   in the current code. Bootstrap CSS and Icons are loaded via CDN in `index.html` and Bootstrap
+   Icons are used throughout components (e.g., `bi-play-fill`, `bi-gear`).
+
+7. **Music uses external CDN audio files** (Pixabay). These are royalty-free but require internet.
+
+8. **The `dist/` directory exists** in `frontend/`, indicating a previous production build was run.
+
+9. **The API service layer** (`services/api.js`) is designed as a swap-in point. Functions exist
+   with TODO comments showing the real endpoint. Currently all return mock data.
+
+10. **Timer tick uses `setInterval` (1s accuracy).** Not drift-compensated. Acceptable for
+    Pomodoro but will drift slightly over long sessions.
+
+---
+
+## Current Position
+
+The Nami project has a **fully functional, standalone frontend Pomodoro timer** with an
+ocean-themed design, background music, session history, todo list, and settings. All of
+this runs client-side with no backend dependency. The original collaborative features
+(auth, profiles, friends, rooms, WebSocket sync) were previously built as Django apps
+and React pages, but have been **intentionally archived** to start fresh. The backend
+shell (config, Docker, CI/CD) is still in place but has no active apps. The immediate
+development situation is: either continue building the frontend independently, or begin
+restoring archived backend apps and reconnecting the API layer.

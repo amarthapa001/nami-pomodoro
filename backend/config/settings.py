@@ -23,12 +23,12 @@ INSTALLED_APPS = [
     "channels",
     "cloudinary",
     "cloudinary_storage",
-    # our apps
-    "apps.users",
-    "apps.profiles",
-    "apps.friends",
-    "apps.rooms",
-    "apps.websockets",
+    # our apps (currently archived in _archive/ — uncomment as you bring them back)
+    # "apps.users",
+    # "apps.profiles",
+    # "apps.friends",
+    # "apps.rooms",
+    # "apps.websockets",
 ]
 
 MIDDLEWARE = [
@@ -47,7 +47,7 @@ ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-AUTH_USER_MODEL = "users.User"
+# AUTH_USER_MODEL = "users.User"  # Uncomment when users app is restored from _archive/
 
 TEMPLATES = [
     {
